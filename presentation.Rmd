@@ -1,0 +1,472 @@
+---
+title: "Using Shiny to create apps and dashboards"
+author: "Václav Čepelák"
+date: "April 9, 2018"
+runtime: shiny
+output: 
+  ioslides_presentation:
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Outline
+
+- What is Shiny?
+- On what platforms it can be used?
+- How to build the app?
+- How to improve graphics?
+
+# What is Shiny?
+
+## Shiny
+
+Shiny is an R package that builds interactive webapps straight from R
+
+```{r install, echo = TRUE, eval = FALSE}
+install.packages('shiny')
+library(shiny)
+```
+
+[https://shiny.rstudio.com](https://shiny.rstudio.com)
+gallery of Shiny apps with source codes [here](https://shiny.rstudio.com/gallery/)
+Shiny tutorials [here](https://shiny.rstudio.com/tutorial/)
+
+
+## What platforms?
+
+- Run directly from R
+- shinyapps.io
+- RStudio connect
+- install it on a server
+- [embed](https://beta.rstudioconnect.com/content/2671/Combining-Shiny-R-Markdown.html) in R Markdown (html, ioslides, [flexdashboard](https://rmarkdown.rstudio.com/flexdashboard/))
+
+
+## How it works
+
+```{r basic, echo = TRUE, eval = FALSE}
+library(shiny)
+
+ui <- fluidPage(
+   # Define UI for application: inputs and outputs
+)
+
+server <- function(input, output) {
+  # Define what computations need to be performed
+  # i.e. what happens if you change inputs
+}
+
+# Run the application 
+shinyApp(ui = ui, server = server)
+```
+
+
+## ... and for more complex apps
+
+The app is composed from multiple `.R` files and additional files required for the app (e.g. data, pictures, CSS) stored in one folder having the name of the app.
+
+- `global.R` is an optional script, which performs all the computations before the app is launched
+- `ui.R` is a script that defines the user interface
+- `server.R` is a script that defines the computations performed
+- `www` is a folder containing all the supplementary files
+
+The app can be run by clicking on the `Run app` button or by
+```{r runapp, echo = TRUE, eval = FALSE}
+runApp('path/to/folder')
+```
+
+
+
+## Let's build a simple app together
+
+We are going to build a simple app: takes an SPSS data file as an input and plots a frequency of a selected variable.
+
+We will follow these steps:
+1. Decide how the UI is going to look like
+2. Prepare the script to load data
+3. Set the functionalities of the app to run properly
+4. Run the app
+
+
+# User interface
+
+
+## Building a user interface
+
+1. **General layout** (sidebars, panels, pages etc.)
+2. **Widgets** (sliders, input boxes etc.) 
+3. **Outputs** (plots, tables etc.)
+
+## General layout
+
+Shiny is HTML-based, i.e. R functions are used to build an HTML code. Therefore anyone familiar with HTML can customize Shiny apps easily (R contains mirror-functions to HTML tags). 
+
+There are built-in functions to compose layouts:
+- `sidebarLayout` (a simple one - **let's use it for our app**)
+- grid layout (using `fluidRow` and `columns` function)
+
+Multiple panels can be used:
+- using `tabsetPanel` function
+- using `navlistPanel`
+
+more information [here](https://shiny.rstudio.com/articles/layout-guide.html)
+
+
+## Our app's layout will look like this
+
+```{r layout_structure, echo = TRUE, eval = FALSE}
+
+ui <- fluidPage(
+  # Title of the app
+  titlePanel("My first app"), 
+  
+  # Define the sidebar layout
+  sidebarLayout(
+    
+    sidebarPanel(
+      # add content (the widgets) here
+    ),
+    
+    mainPanel(
+     # add content (the outputs) here 
+    )
+  )
+)
+
+```
+
+
+## Widgets
+
+The gallery of widgets available [here](https://shiny.rstudio.com/gallery/widget-gallery.html)
+
+A widget is created by a function (e.g. a select box is defined by the [`selectInput` function](https://shiny.rstudio.com/reference/shiny/1.0.3/selectInput.html))
+
+Each object (widget, plot) has its unique name (id) defined in the function
+
+
+## Our app's widgets
+
+We will add a select box that selects a variable from input data and a radio button with ordering options
+
+```{r input_widgets, echo = TRUE, eval = FALSE}
+
+    sidebarPanel(
+      # add select box
+      selectInput('variable', label = 'Select variable: ',
+                  choices = ## will be added later ##
+      ),
+      # add radio button
+      radioButtons('order', label = 'Ordering options: ',
+                   choices = c('None', 'Sort by frequency', 
+                               'Sort alphabetically'),
+                   selected = 1)
+      
+    ),
+
+```
+
+
+## Two remarks on widgets
+
+Sliders in Shiny (`sliderInput`) have a `playButton` (and a `pauseButton`) parameter which enables to do a simple animated plot (more details [here](https://shiny.rstudio.com/gallery/sliders.html))
+
+*File upload* and *file download* are possible in the Shiny app (examples [here](https://shiny.rstudio.com/gallery/file-upload.html) and  [here](https://shiny.rstudio.com/gallery/file-download.html))
+
+
+## Add logo
+
+We will add a short text and logo using the `img` and `h4` functions.
+These functions create the `<img>` and `<h4>` HTML tags and the argument passed to them are exactly the same as would be passed to [these tags](https://www.w3schools.com/tags/att_img_width.asp).
+
+```{r picture, echo = TRUE, eval = FALSE}
+    sidebarPanel(
+      ### Widgets ###
+      # name of a file stored in the `myfirstapp/www` folder
+      img(src = 'Ipsos-logo.jpg', align = "center", height = "42" width = "42"),
+      h4('Created by ', b('Ipsos'))
+    ),
+```
+
+
+
+
+## Outputs {.flexbox .vcenter}
+
+Outputs are displayed in the app using `*Output` functions.
+Each `*Output` function has its mirror `render*` function being used in the `server.R` script
+
+| **Type of content** |      **Output**     |  **Render**  |
+|:-------------------:|:-------------------:|:------------:|
+|   plot (graphical)  |      plotOutput     |  renderPlot  |
+|        plotly       |     plotlyOutput    | renderPlotly |
+|        image        |     imageOutput     |  renderImage |
+|        table        |     tableOutput     |  renderTable |
+|      data table     |   dataTableOutput   |              |
+|         HTML        | htmlOutput uiOutput |   renderUI   |
+|       R output      |  verbatimTextOutput |  renderPrint |
+|         Text        |      textOutput     |  renderText  |
+
+
+## Plotly
+
+[https://plot.ly](https://plot.ly)
+- An open source platform for creating interactive plots that can be embedded in HTML documents
+- Libraries for R, Python, JavaScript
+- A Plotly tutorial for Shiny [here](https://plot.ly/r/shiny-tutorial/)
+
+## a Plotly example
+
+```{r plotly_example, echo = FALSE, eval = TRUE, warning = FALSE, message = FALSE}
+library(plotly)
+p <- plot_ly(data = iris, x = ~Sepal.Length, y = ~Petal.Length,
+             marker = list(size = 10,
+                           color = 'rgba(255, 182, 193, .9)',
+                           line = list(color = 'rgba(152, 0, 0, .8)',
+                                       width = 2))) %>%
+  layout(title = 'Styled Scatter',
+         yaxis = list(zeroline = FALSE),
+         xaxis = list(zeroline = FALSE))
+p
+
+```
+
+
+## Our app's outputs
+
+Let's create a main panel. We will add a header containing the question's label - this is performed via the `uiOutput` function. And we will add a `plotly` bar chart.
+
+```{r main_panel, echo = TRUE, eval = FALSE}
+mainPanel(
+     uiOutput('question'),
+     plotlyOutput('plot')
+    )
+```
+
+
+# Loading the data
+
+## Loading the data
+
+The data are usually loaded and transformed in the `global.R` script (more on this later). 
+
+The data are loaded using the R functions from any format R is able to read:
+- `read.csv` / `read.csv2` for **csv** files
+- `read.table` for **txt** files
+- `read.spss` from the `foreign` library for **sav** files
+
+## Our app's data
+
+The following script loads data from SPSS to R and selects only factor variables with max. 10 distinctive categories.
+
+```{r main_panel1, echo = TRUE, eval = FALSE}
+### global.R script ###
+library(foreign)
+shiny_data <- read.spss('./www/wvs1995_v3.sav', to.data.frame = TRUE)
+id_var <- 'V3'
+
+selected_columns <- sapply(names(shiny_data), function(x) {
+  if (x == id_var) {
+    return(TRUE)
+  } else if (attr(shiny_data, 'variable.labels')[x]) == '') {
+    return(FALSE)
+  } else if (!is.factor(shiny_data[[x]])) {
+    return(FALSE)
+  } else {
+    return(length(levels(shiny_data[[x]])) <= 10)
+  }
+})
+### =>
+```
+
+## Our app's data
+
+```{r main_panel2, echo = TRUE, eval = FALSE}
+### =>
+variables <- data.frame(var = names(shiny_data)[selected_columns],
+                        label = attr(shiny_data,
+                                     'variable.labels')[selected_columns],
+                        stringsAsFactors = FALSE)
+
+shiny_data <- shiny_data[, selected_columns]
+
+
+```
+
+```{r selectbox, echo = TRUE, eval = FALSE}
+# choices are added to the selectInput
+selectInput('variable', label = 'Select variable: ',
+            choices = variables$var),
+
+```
+
+
+# Server function
+
+## How the app works
+
+- The `server` function (re)computes outputs when inputs change
+- Code outside the `server` functions runs **once per R session** (... it means that when underlying data change the app must be restarted)
+- Code inside the `server` function runs **everytime one user connects**
+- Code inside a reactive function (i.e. function inside the `server` function) runs **with every reaction** (change of the input)
+
+
+## Render functions
+
+The render functions are placed inside the server function like this...
+
+```{r server_function, echo = TRUE, eval = FALSE}
+
+server <- function(input, output) {
+  output$question <- renderUI({
+    ### code here ###
+  })
+  
+  output$plot <- renderPlotly({
+    ### code here ###
+  })
+}
+
+```
+
+
+## The renderUI function
+
+This code creates the header with the varable label...
+
+```{r renderui, echo = TRUE, eval = FALSE}
+
+output$question <- renderUI({
+  ui_output <- h2(variables$label[variables$var == input$variable])
+  return(ui_output)
+})
+
+```
+
+
+
+## Reactive function
+
+The `reactive` function is used to create objects (transformations, tables, subsets of data etc.) **inside** the `server` **function**, which is recomputed with the change of inputs but does not directly print any output but is used by other `render` functions.
+
+Note: the `reactive` objects are called in other parts of code as **functions**
+
+More details [here](https://shiny.rstudio.com/tutorial/written-tutorial/lesson6/).
+
+## Reactive function in our app
+
+The reactive function is used for preparing the underlying table of the plot
+
+```{r reactive, echo = TRUE, eval = FALSE}
+
+plot_table <- reactive({
+  plot_table <- data.frame(table(shiny_data[[input$variable]]))
+  if (input$order == '2') {
+    plot_table <- dplyr::arrange(plot_table, desc(Freq))
+  } else if (input$order == '3') {
+    plot_table <- dplyr::arrange(plot_table, Var1)
+  }
+  return(plot_table)
+})
+
+```
+
+
+
+
+## The renderPlotly function
+
+This code creates the plot...
+
+```{r renderplotly, echo = TRUE, eval = FALSE}
+
+output$plot <- renderPlotly({
+  p <- plot_ly(x = plot_table()$Var1,
+               y = plot_table()$Freq,
+               type = 'bar',
+               orientation = 'h')
+})
+
+```
+
+
+## And the app will look like this
+
+```{r app, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
+library(dplyr)
+library(foreign)
+library(plotly)
+library(shiny)
+
+shiny_data <- read.spss('./www/wvs1995_v3.sav', to.data.frame = TRUE)
+id_var <- 'V3'
+
+selected_columns <- sapply(names(shiny_data), function(x) {
+  if (x == id_var) {
+    return(TRUE)
+  } else if (attr(shiny_data, 'variable.labels')[x] == '') {
+    return(FALSE)
+  } else if (!is.factor(shiny_data[[x]])) {
+    return(FALSE)
+  } else {
+    return(length(levels(shiny_data[[x]])) <= 10)
+  }
+})
+
+variables <- data.frame(var = names(shiny_data)[selected_columns],
+                        label = attr(shiny_data,
+                                     'variable.labels')[selected_columns],
+                        stringsAsFactors = FALSE)
+shiny_data <- shiny_data[, selected_columns]
+
+
+ui <- fluidPage(
+  # Title of the app
+  titlePanel("My first app"), 
+  
+  # Define the sidebar layout
+  sidebarLayout(
+    
+    # add select box
+      selectInput('variable', label = 'Select variable: ',
+                  choices = variables$var),
+      # add radio button
+      radioButtons('order', label = 'Ordering options: ',
+                   choices = c('None', 'Sort by frequency', 
+                               'Sort alphabetically'),
+                   selected = 1)
+  )
+)
+
+server <- function(input, output) {
+  
+  plot_table <- reactive({
+    plot_table <- data.frame(table(shiny_data[[input$variable]]))
+    if (input$order == '2') {
+      plot_table <- dplyr::arrange(plot_table, desc(Freq))
+    } else if (input$order == '3') {
+      plot_table <- dplyr::arrange(plot_table, Var1)
+    }
+    return(plot_table)
+  })
+  
+  output$question <- renderUI({
+    ui_output <- h2(variables$label[variables$var == input$variable])
+    return(ui_output)
+  })
+  
+  output$plot <- renderPlotly({
+  p <- plot_ly(x = plot_table()$Var1,
+               y = plot_table()$Freq,
+               type = 'bar',
+               orientation = 'h',
+               width = 500)
+  })
+}
+
+# Run the app 
+shinyApp(ui = ui, server = server)
+
+```
