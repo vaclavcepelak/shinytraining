@@ -5,8 +5,8 @@ account: vcepelak
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 317637
-bundleId: 1308492
+bundleId: 1308539
 url: https://vcepelak.shinyapps.io/shinytraining/
-when: 1523210618.89102
+when: 1523213968.63568
 asMultiple: FALSE
 asStatic: FALSE

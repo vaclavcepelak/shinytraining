@@ -529,7 +529,7 @@ shinyApp(ui = ui, server = server)
 
 # In a nutshell
 
-## How to build a shiny app {.fontsize = '120%'}
+## How to build a shiny app {.biggerfont}
 
 1. Start in the RStudio menu (File -> New File -> Shiny web app)
 2. Select the layout structure of the UI
@@ -539,7 +539,7 @@ shinyApp(ui = ui, server = server)
 6. Debug the app and improve the UI
 7. Deploy the app
 
-# Questions? Comments?
+# Questions? Comments? {.bigfont}
 
-- The presentation available [online](https://vcepelak.shinyapps.io/shinytraining) or in [HTML file]()
-- The shiny app available [here]()
+- The presentation available [online](https://vcepelak.shinyapps.io/shinytraining) or in [HTML file](https://raw.githubusercontent.com/vaclavcepelak/shinytraining/master/presentation_html.html)
+- The shiny app available [here](https://vcepelak.shinyapps.io/MyFirstApp/)

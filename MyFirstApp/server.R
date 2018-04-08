@@ -31,7 +31,7 @@ shinyServer(function(input, output) {
   
   output$plot <- renderPlotly({
     plot_ly(y = plot_table()$Var1, x = plot_table()$Freq, type = 'bar',
-            orientation = 'h', height = 350) %>%
+            orientation = 'h') %>%
       layout(margin = list(l = 150))
   })
   
