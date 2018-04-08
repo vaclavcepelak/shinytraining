@@ -3,7 +3,6 @@
 title: "Using Shiny to create apps and dashboards"
 author: "Václav Čepelák"
 date: "April 9, 2018"
-runtime: shiny
 output: 
   ioslides_presentation:
     widescreen: true
@@ -414,97 +413,6 @@ output$plot <- renderPlotly({
 ```
 
 
-## And the app will look like this
-
-```{r app, echo = FALSE, eval = TRUE, message = FALSE, warning = FALSE}
-library(dplyr)
-library(foreign)
-library(plotly)
-library(shiny)
-
-shiny_data <- read.spss('./MyFirstApp/www/wvs1995_CZ_subset.sav', to.data.frame = TRUE,
-                        use.missings = TRUE)
-
-selected_columns <- sapply(names(shiny_data), function(x) {
-  if (attr(shiny_data, 'variable.labels')[x] == '') {
-    return(FALSE)
-  } else if (!is.factor(shiny_data[[x]])) {
-    return(FALSE)
-  } else {
-    return(length(levels(shiny_data[[x]])) <= 10 & 
-             length(levels(shiny_data[[x]])) >= 2)
-  }
-})
-
-variables <- data.frame(var = names(shiny_data)[selected_columns],
-                        label = attr(shiny_data,
-                                     'variable.labels')[selected_columns],
-                        stringsAsFactors = FALSE)
-shiny_data <- shiny_data[, selected_columns]
-
-
-ui <- fluidPage(
-  # Title of the app
-  titlePanel("My first app"), 
-  
-  # Define the sidebar layout
-  sidebarLayout(
-    
-    sidebarPanel(
-      # add select box
-      selectInput('variable', label = 'Select variable: ',
-                  choices = variables$var),
-      # add radio button
-      radioButtons('order', label = 'Ordering options: ',
-                   choiceNames = c('None', 'Sort by frequency', 
-                                   'Sort alphabetically'),
-                   choiceValues = c('none', 'freq', 'alpha'),
-                   selected = 'none'),
-      tags$img(src = 'Ipsos-logo.jpg', align = "center", 
-               height = 50, width = 50),
-      tags$h4('Created by ', tags$b('Ipsos'))
-    ),
-      
-    mainPanel(
-      # variable label as HTML
-      uiOutput('question'),
-      # plot
-      plotlyOutput('plot')
-    )
-  )
-)
-
-server <- function(input, output) {
-  plot_table <- reactive({
-    plot_table <- data.frame(table(shiny_data[[input$variable]]),
-                             stringsAsFactors = FALSE)
-    if (input$order == 'freq') {
-      plot_table <- plot_table %>% dplyr::arrange(desc(Freq))
-    } else if (input$order == 'alpha') {
-      plot_table <- plot_table %>% dplyr::arrange(as.character(Var1))
-    }
-    plot_table$Var1 <- factor(plot_table$Var1, 
-                              levels = rev(plot_table$Var1))
-    
-    return(plot_table)
-  })
-  
-  output$question <- renderUI({
-    ui_output <- h2(variables$label[variables$var == input$variable])
-    return(ui_output)
-  })
-  
-  output$plot <- renderPlotly({
-  plot_ly(y = plot_table()$Var1, x = plot_table()$Freq, type = 'bar',
-          orientation = 'h', height = 350) %>%
-      layout(margin = list(l = 150))
-  })
-}
-
-# Run the app 
-shinyApp(ui = ui, server = server)
-
-```
 
 # Additional notes
 
@@ -540,6 +448,3 @@ shinyApp(ui = ui, server = server)
 7. Deploy the app
 
 # Questions? Comments?
-
-- The presentation available [online](https://vcepelak.shinyapps.io/shinytraining) or in [HTML file]()
-- The shiny app available [here]()

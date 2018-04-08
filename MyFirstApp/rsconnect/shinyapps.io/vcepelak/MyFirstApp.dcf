@@ -1,0 +1,12 @@
+name: MyFirstApp
+title: MyFirstApp
+username:
+account: vcepelak
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 317718
+bundleId: 1308477
+url: https://vcepelak.shinyapps.io/MyFirstApp/
+when: 1523209741.43002
+asMultiple: FALSE
+asStatic: FALSE
