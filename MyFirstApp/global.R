@@ -11,7 +11,7 @@ library(plotly)
 library(shiny)
 
 # read data from SPSS
-shiny_data <- read.spss('.MyFirstApp/www/wvs1995_CZ_subset.sav', to.data.frame = TRUE,
+shiny_data <- read.spss('./www/wvs1995_CZ_subset.sav', to.data.frame = TRUE,
                         use.missings = TRUE)
 
 # select only relevant variables
